@@ -3,16 +3,15 @@ package controllers;
 import java.util.Collection;
 
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 import models.Pet;
 import models.Pet.Gender;
-import play.Logger;
 import play.data.DynamicForm;
 import play.data.Form;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
+import play.i18n.Messages;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -24,12 +23,10 @@ public class Pets extends Controller {
 	@Transactional
 	public static Result list() {
 		Collection<Pet> pets = getAllPets();
-		if (pets.isEmpty())
-			addPets();
-		pets = getAllPets(); // just for testing
+		if (pets.isEmpty()) addPets(); pets = getAllPets(); // just for testing
 		return ok(Json.toJson(pets));
 	}
-
+	
 	private static Collection<Pet> getAllPets() {
 		EntityManager em = JPA.em();
 		String queryString = "SELECT p FROM Pet p";
@@ -48,7 +45,7 @@ public class Pets extends Controller {
 		pet2.setName("Snoopy");
 		em.persist(pet2);
 	}
-
+	
 	@Transactional
 	public static Result show(long id) {
 		Pet pet = getPetById(id);
@@ -62,25 +59,25 @@ public class Pets extends Controller {
 		EntityManager em = JPA.em();
 		return em.find(Pet.class, id);
 	}
-
+	
 	@Transactional
 	public static Result newPetResponse() {
 		return ok(petresponseform.render(getAllPets()));
 	}
-
+	
 	@Transactional
 	public static Result createPetResponse() {
 		DynamicForm form = Form.form().bindFromRequest();
 		String petId = form.data().get("petId");
 		String petResponse = form.data().get("petResponse");
 		Pet pet = getPetById(Long.valueOf(petId));
-		return ok(pet.getName() + " says " + petResponse);
+		return ok(Messages.get("pet.response", pet.getName(), petResponse));
 	}
-
+	
 	public static Result newPet() {
 		return ok(petform.render(Form.form(Pet.class)));
 	}
-
+	
 	@Transactional
 	public static Result createPet() {
 		Form<Pet> form = Form.form(Pet.class).bindFromRequest();
