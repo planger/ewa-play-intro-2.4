@@ -3,10 +3,16 @@ package controllers;
 import java.util.ArrayList;
 import java.util.List;
 
+import play.Logger;
+import play.libs.F.Function;
+import play.libs.F.Promise;
+import play.libs.ws.WS;
+import play.libs.ws.WSRequestHolder;
+import play.libs.ws.WSResponse;
 import play.mvc.Controller;
 import play.mvc.Result;
-import views.html.index;
 import views.html.characterlist;
+import views.html.index;
 
 public class Application extends Controller {
 
@@ -36,5 +42,21 @@ public class Application extends Controller {
 		}
 		return ok(characterlist.render(text, characters));
 	}
+
+	public static Promise<Result> longRunningAction() {
+		Logger.info("Long running action entry");
+		WSRequestHolder duckduck = WS.url("https://duckduckgo.com/");
+		Promise<WSResponse> duckduckResponse = duckduck.get();
+		Promise<Result> result = duckduckResponse.map(toResult);
+		Logger.info("Long running action exit");
+		return result;
+	}
+
+	private static Function<WSResponse, Result> toResult = new Function<WSResponse, Result>() {
+		public Result apply(WSResponse response) {
+			Logger.info("Inside the toResult function");
+			return ok(response.getBody()).as("text/html");
+		}
+	};
 
 }
